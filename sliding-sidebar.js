@@ -107,7 +107,8 @@ POSSIBILITY OF SUCH DAMAGE.
                 // console.log("changed! " + _pos);
             }
 
-            if ($elem.data("snapped") !== true) {
+            if ($elem.data("snapped") !== true &&
+                    $(document).height() >= $elem.height() + $elem.offset().top ) {
 
                 // If direction is going down, and bottom is above the window,
                 // snap to bottom. If direction is going up, snap to top.
@@ -115,10 +116,13 @@ POSSIBILITY OF SUCH DAMAGE.
                         $elem.height() + $elem.offset().top <
                         (scroll_top + $(window).height())) {
 
+                    var _bot = Math.max(0, ($(window).height() + scroll_top) -
+                                ($elem.offset().top + $elem.height()));
+
                     $elem
                     .css("position", "fixed")
                     .css("top", "auto")
-                    .css("bottom", "0px")
+                    .css("bottom", _bot + "px")
                     .data("snapped", true);
 
                     // console.log("snapped bottom!");
@@ -126,6 +130,7 @@ POSSIBILITY OF SUCH DAMAGE.
                 } else if (direction == "up" &&
                            $elem.offset().top >
                            (scroll_top + $elem.data("orig_top"))) {
+
                     $elem
                     .css("position", "fixed")
                     .css("top", $elem.data("orig_top") + "px")
