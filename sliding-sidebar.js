@@ -87,15 +87,14 @@ POSSIBILITY OF SUCH DAMAGE.
             if (prev_scroll_top !== undefined) {
                 if (prev_scroll_top < scroll_top) {
                     direction = "down";
-                    $elem.data('direction', direction);
                 } else if (prev_scroll_top > scroll_top) {
                     direction = "up";
-                    $elem.data('direction', direction);
                 }
             }
+            $elem.data('direction', direction);
 
             // If direction changed, release element (make absolute positioned)
-            if (direction != "none" && direction != prev_direction) {
+            if (direction != prev_direction) {
                 var _pos = $elem.offset().top;
 
                 $elem
@@ -110,19 +109,27 @@ POSSIBILITY OF SUCH DAMAGE.
             if ($elem.data("snapped") !== true &&
                     $(document).height() >= $elem.height() + $elem.offset().top ) {
 
+                // If smaller than window, fix position.
                 // If direction is going down, and bottom is above the window,
                 // snap to bottom. If direction is going up, snap to top.
-                if (direction == "down" &&
+
+                if ($elem.data("orig_top") + $elem.height() <=
+                        $(window).height()) {
+
+                    $elem
+                    .css("position", "fixed")
+                    .css("top", $elem.data("orig_top") + "px")
+                    .css("bottom", "auto")
+                    .data("snapped", true);
+
+                } else if (direction == "down" &&
                         $elem.height() + $elem.offset().top <
                         (scroll_top + $(window).height())) {
-
-                    var _bot = Math.max(0, ($(window).height() + scroll_top) -
-                                ($elem.offset().top + $elem.height()));
 
                     $elem
                     .css("position", "fixed")
                     .css("top", "auto")
-                    .css("bottom", _bot + "px")
+                    .css("bottom", "0px")
                     .data("snapped", true);
 
                     // console.log("snapped bottom!");
