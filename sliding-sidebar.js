@@ -52,12 +52,6 @@ POSSIBILITY OF SUCH DAMAGE.
                 console.log("WARN: strict doctype required but not defined.");
             }
 
-            if ($(t.element).css("position") != "absolute") {
-                // Note: this plugin assumes the element it's used with
-                // is initially absolutely positioned.
-                console.log("WARN: element not absolutely positioned.");
-            }
-
             $(window)
             .on('resize.slidingSidebar', t.element,
                 function(){t.update(t.element, t.options);})
