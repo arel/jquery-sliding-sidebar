@@ -44,13 +44,20 @@ POSSIBILITY OF SUCH DAMAGE.
 
         init: function() {
 
+            var t = this;
+
             if (document.doctype === null) {
                 // Note: a strict doctype definition is required for
                 // $(window).height() to give a correct value.
-                console.log("Warning: a strict doctype is required but not defined.");
+                console.log("WARN: strict doctype required but not defined.");
             }
 
-            var t = this;
+            if ($(t.element).css("position") != "absolute") {
+                // Note: this plugin assumes the element it's used with
+                // is initially absolutely positioned.
+                console.log("WARN: element not absolutely positioned.");
+            }
+
             $(window)
             .on('resize.slidingSidebar', t.element,
                 function(){t.update(t.element, t.options);})
@@ -66,7 +73,7 @@ POSSIBILITY OF SUCH DAMAGE.
             // record initial position
             if ($elem.data("orig_top") === undefined) {
                 $elem.data("orig_top", $elem.offset().top);
-                console.log("recorded original top: "+$elem.data("orig_top"));
+                // console.log("recorded original top: "+$elem.data("orig_top"));
             }
 
             // get/update previous position
@@ -76,52 +83,64 @@ POSSIBILITY OF SUCH DAMAGE.
             $elem.data('scroll_top', $(window).scrollTop());
 
             // determine scroll direction
-            var direction = "";
-            if (prev_scroll_top === undefined || prev_scroll_top <= scroll_top) {
-                direction = "down";
-            } else {
-                direction = "up";
-            }
-            $elem.data('direction', direction);
-
-            // If direction changed, release element (make absolute positioned)
-            if (direction != prev_direction) {
-                var _pos = $elem.offset().top;
-                console.log("changed! " + _pos);
-                $elem.css("position", "absolute").css("top", _pos + "px").css("bottom", "auto");
-                $elem.data("snapped", false);
-            }
-
-            // If direction is going down, and bottom is above the window, snap to bottom
-
-            if ($elem.data("snapped") !== true) {
-                if (direction == "down" && $elem.height() + $elem.offset().top < (scroll_top + $(window).height())) {
-                    console.log("snapped bottom!");
-                    $elem.css("position", "fixed").css("top", "auto").css("bottom", "0px");
-                    $elem.data("snapped", true);
-                } else if (direction == "up" && $elem.offset().top > (scroll_top)) {
-                    console.log("snapped top!");
-                    $elem.css("position", "fixed").css("top", "0px").css("bottom", "auto");
-                    $elem.data("snapped", true);
+            var direction = "none";
+            if (prev_scroll_top !== undefined) {
+                if (prev_scroll_top < scroll_top) {
+                    direction = "down";
+                    $elem.data('direction', direction);
+                } else if (prev_scroll_top > scroll_top) {
+                    direction = "up";
+                    $elem.data('direction', direction);
                 }
             }
 
-            if (direction == "up" && $elem.offset().top < $elem.data("orig_top")) {
-                $elem.removeAttr("style");
-                $elem.data("snapped", false);
-                console.log("totally unsnapped!");
-                console.log($elem.offset().top);
-                console.log($elem.data("orig_top"));
+            // If direction changed, release element (make absolute positioned)
+            if (direction != "none" && direction != prev_direction) {
+                var _pos = $elem.offset().top;
+
+                $elem
+                .css("position", "absolute")
+                .css("top", _pos + "px")
+                .css("bottom", "auto")
+                .data("snapped", false);
+
+                // console.log("changed! " + _pos);
             }
 
-            console.log(direction + " " + scroll_top);
+            if ($elem.data("snapped") !== true) {
 
+                // If direction is going down, and bottom is above the window,
+                // snap to bottom. If direction is going up, snap to top.
+                if (direction == "down" &&
+                        $elem.height() + $elem.offset().top <
+                        (scroll_top + $(window).height())) {
+
+                    $elem
+                    .css("position", "fixed")
+                    .css("top", "auto")
+                    .css("bottom", "0px")
+                    .data("snapped", true);
+
+                    // console.log("snapped bottom!");
+
+                } else if (direction == "up" &&
+                           $elem.offset().top >
+                           (scroll_top + $elem.data("orig_top"))) {
+                    $elem
+                    .css("position", "fixed")
+                    .css("top", $elem.data("orig_top") + "px")
+                    .css("bottom", "auto")
+                    .data("snapped", true);
+
+                    // console.log("snapped top!");
+                }
+            }
+
+            // console.log(direction + " " + scroll_top);
 
         }
     };
 
-    // A really lightweight plugin wrapper around the constructor,
-    // preventing against multiple instantiations
     $.fn[pluginName] = function ( options ) {
         return this.each(function () {
             if (!$.data(this, "plugin_" + pluginName)) {
