@@ -62,19 +62,21 @@ POSSIBILITY OF SUCH DAMAGE.
 
         update: function(elem, options) {
 
-            $elem = $(elem);
-
-            // record initial position
-            if ($elem.data("orig_top") === undefined) {
-                $elem.data("orig_top", $elem.offset().top);
-                // console.log("recorded original top: "+$elem.data("orig_top"));
-            }
-
-            // get/update previous position
+            var $elem = $(elem);
             var prev_scroll_top = $elem.data('scroll_top');
             var scroll_top = $(window).scrollTop();
+            var elem_top = $elem.offset().top;
             var prev_direction = $elem.data('direction');
-            $elem.data('scroll_top', $(window).scrollTop());
+
+            // record initial position relative to window
+            if ($elem.data("orig_top") === undefined) {
+                $elem.data("orig_top", elem_top - scroll_top);
+
+                // console.log("original top: " + $elem.data("orig_top"));
+            }
+
+            // remember previous position
+            $elem.data('scroll_top', scroll_top);
 
             // determine scroll direction
             var direction = "none";
@@ -89,7 +91,7 @@ POSSIBILITY OF SUCH DAMAGE.
 
             // If direction changed, release element (make absolute positioned)
             if (direction != prev_direction) {
-                var _pos = $elem.offset().top;
+                var _pos = elem_top;
 
                 $elem
                 .css("position", "absolute")
@@ -101,7 +103,7 @@ POSSIBILITY OF SUCH DAMAGE.
             }
 
             if ($elem.data("snapped") !== true &&
-                    $(document).height() >= $elem.height() + $elem.offset().top ) {
+                    $(document).height() >= $elem.height() + elem_top ) {
 
                 // If smaller than window, fix position.
                 // If direction is going down, and bottom is above the window,
@@ -116,8 +118,10 @@ POSSIBILITY OF SUCH DAMAGE.
                     .css("bottom", "auto")
                     .data("snapped", true);
 
+                    // console.log("fixed to original position!");
+
                 } else if (direction == "down" &&
-                        $elem.height() + $elem.offset().top <
+                        $elem.height() + elem_top <
                         (scroll_top + $(window).height())) {
 
                     $elem
@@ -129,7 +133,7 @@ POSSIBILITY OF SUCH DAMAGE.
                     // console.log("snapped bottom!");
 
                 } else if (direction == "up" &&
-                           $elem.offset().top >
+                           elem_top >
                            (scroll_top + $elem.data("orig_top"))) {
 
                     $elem
